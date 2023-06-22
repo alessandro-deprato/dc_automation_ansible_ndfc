@@ -1,0 +1,4 @@
+---
+collections:
+  - name: cisco.dcnm
+    version: 3.3.0

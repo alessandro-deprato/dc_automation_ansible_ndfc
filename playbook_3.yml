@@ -1,0 +1,35 @@
+---
+- name: "PUSH NETBOX PREFIXES TO NDFC"
+  hosts: ndfc
+  gather_facts: false
+  vars:
+    netbox_url: http://10.50.128.210
+    netbox_token: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          62346332666264633966306232333262633239346335323461326161333438316166623862343836
+          3633626432623330333036376261376434396531383739620a376434343939613333383330633330
+          64663131643739613461663566333761656265333534636665346237396262363562313131376363
+          3535376632306364350a346663353234363266303665663865313937316331363539613934373337
+          34653166663262353636383934383334666530653835323433336332366665346639393338643035
+          3966646533313764333662363537656231356637316263316535
+    vrf: "adeprato_development_vrf"
+    filter: "tenant=adeprato_development_tn"
+  tasks:
+    - name: Create Networks
+      cisco.dcnm.dcnm_network:
+        fabric: AMS-CML-VXLAN
+        state: replaced
+        config:
+          - net_name: "{{ item.value.description }}"
+            vrf_name: "{{ item.value.vrf.display }}"
+            net_template: "{{ item.value.custom_fields.net_template }}"
+            net_extension_template: "{{ item.value.custom_fields.net_extension_template }}"
+            gw_ip_subnet: "{{ item.value.custom_fields.gateway }}"
+            vlan_id: "{{ item.value.vlan.vid }}"
+            attach:
+              - ip_address: 172.16.254.179
+                ports: [Port-Channel3]
+              - ip_address: 172.16.254.180
+                ports: [Port-Channel3]
+            deploy: true
+      loop: "{{ query('netbox.netbox.nb_lookup', 'prefixes', api_filter=filter, api_endpoint=netbox_url, token=netbox_token) | json_query('[*]') }}"

@@ -1,0 +1,43 @@
+---
+- name: AI/ML Fabric Create
+  gather_facts: false
+  hosts:
+    - ndfc
+  tasks:
+    - name: Prepare Interfaces
+      cisco.dcnm.dcnm_interface:
+        fabric: AMS-CML-VXLAN
+        state: merged
+        config:
+          - name: vpc3
+            type: vpc
+            switch:
+              - "172.16.254.179"
+              - "172.16.254.180"
+            profile:
+              admin_state: true
+              mode: trunk
+              peer1_pcid: 3
+              peer2_pcid: 3
+              peer1_members:
+                - e1/3
+              peer2_members:
+                - e1/3
+              pc_mode: 'active'
+              bpdu_guard: true
+              port_type_fast: true
+              mtu: jumbo
+              peer1_allowed_vlans: none
+              peer2_allowed_vlans: none
+              peer1_description: "VPC acting as trunk peer1"
+              peer2_description: "VPC acting as trunk peer2"
+          - name: eth1/3
+            type: eth
+            switch:
+              - "172.16.254.181"
+            profile:
+              admin_state: true
+              mode: access
+              bpdu_guard: true
+              port_type_fast: true
+              mtu: jumbo
